@@ -8,12 +8,35 @@ use Pollen\Support\Arr;
 use Pollen\Support\HtmlAttrs;
 use League\Plates\Template\Template;
 
-class ViewTemplate extends Template
+class ViewTemplate extends Template implements ViewTemplateInterface
 {
     /**
-     * Récupération de la liste des paramètres.
-     *
-     * @return array
+     * @var ViewEngineInterface
+     */
+    protected $engine;
+
+    /**
+     * @param ViewEngine $engine
+     * @param string $name
+     */
+    public function __construct(ViewEngine $engine, string $name)
+    {
+        parent::__construct($engine, $name);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function __call($name, $arguments)
+    {
+        if ($this->engine->hasDelegate($name)) {
+            return $this->engine->callDelegate($name, $arguments);
+        }
+        return parent::__call($name, $arguments);
+    }
+
+    /**
+     * @inheritDoc
      */
     public function all(): array
     {
@@ -21,12 +44,7 @@ class ViewTemplate extends Template
     }
 
     /**
-     * Récupération de paramètres.
-     *
-     * @param string $key Clé d'indexe de l'attribut. Syntaxe à point permise.
-     * @param mixed|null $default Valeur de retour par défaut.
-     *
-     * @return mixed
+     * @inheritDoc
      */
     public function get(string $key, $default = null)
     {
@@ -34,12 +52,15 @@ class ViewTemplate extends Template
     }
 
     /**
-     * Récupération|Linéarisation d'attributs HTML.
-     *
-     * @param array|null $attrs Liste des attributs HTML.
-     * @param bool $linearized Activation de la linéarisation.
-     *
-     * @return string|array
+     * @inheritDoc
+     */
+    public function getEngine(): ViewEngineInterface
+    {
+        return $this->engine;
+    }
+
+    /**
+     * @inheritDoc
      */
     public function htmlAttrs(?array $attrs = null, bool $linearized = true)
     {
