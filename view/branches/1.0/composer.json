@@ -1,0 +1,54 @@
+{
+  "name": "pollen-solutions/view",
+  "description": "Pollen View Component - Template engine system.",
+  "homepage": "https://www.presstify.com/pollen-solutions/view/",
+  "keywords": [
+    "pollen-solutions",
+    "component",
+    "view",
+    "template engine"
+  ],
+  "time": "2021-02-11",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Jordy Manner",
+      "email": "jordy@presstify.com",
+      "role": "Developper"
+    }
+  ],
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://composer.presstify.com/pollen-solutions/"
+    }
+  ],
+  "require": {
+    "php": ">=7.4",
+    "composer/composer": "^2.0",
+    "composer/installers": "~1.0",
+    "league/plates": "^3.4",
+    "pollen-solutions/container": "^1.0",
+    "pollen-solutions/support": "^1.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Pollen\\View\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Pollen\\View\\": "tests"
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  }
+}
