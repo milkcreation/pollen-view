@@ -27,13 +27,27 @@ interface ViewEngineInterface
     public function callDelegate(string $method, array $args);
 
     /**
-     * Vérification d'existance d'une methode de délégation.
+     * Vérification des permissions d'appel d'une methode de délégation.
      *
      * @param string $mixin
      *
      * @return bool
      */
-    public function hasDelegate(string $mixin): bool;
+    public function canDelegate(string $mixin): bool;
+
+    /**
+     * Vérification d'existence d'une classe de délégation.
+     *
+     * @return bool
+     */
+    public function hasDelegate(): bool;
+
+    /**
+     * Récupération de la classe de délégation.
+     *
+     * @return object|null
+     */
+    public function getDelegate(): ?object;
 
     /**
      * Déclaration d'un instance de délégation d'appel de méthodes.
