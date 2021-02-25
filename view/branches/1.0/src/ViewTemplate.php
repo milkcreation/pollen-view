@@ -29,7 +29,7 @@ class ViewTemplate extends Template implements ViewTemplateInterface
      */
     public function __call($name, $arguments)
     {
-        if ($this->engine->hasDelegate($name)) {
+        if ($this->engine->canDelegate($name)) {
             return $this->engine->callDelegate($name, $arguments);
         }
         return parent::__call($name, $arguments);

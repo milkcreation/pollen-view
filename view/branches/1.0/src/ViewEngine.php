@@ -58,9 +58,25 @@ class ViewEngine extends BaseViewEngine implements ViewEngineInterface
     /**
      * @inheritDoc
      */
-    public function hasDelegate(string $mixin): bool
+    public function canDelegate(string $mixin): bool
     {
-        return (bool)$this->delegate && in_array($mixin, $this->delegatedMixins, true);
+        return $this->hasDelegate() && in_array($mixin, $this->delegatedMixins, true);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function hasDelegate(): bool
+    {
+        return (bool)$this->delegate;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getDelegate(): ?object
+    {
+        return $this->delegate;
     }
 
     /**
