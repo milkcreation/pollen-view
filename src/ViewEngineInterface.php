@@ -12,9 +12,9 @@ interface ViewEngineInterface
     /**
      * @param string $name
      *
-     * @return ViewTemplateInterface
+     * @return ViewLoaderInterface
      */
-    public function make(string $name): ViewTemplateInterface;
+    public function make(string $name): ViewLoaderInterface;
 
     /**
      * Appel d'une méthode de délégation.
@@ -66,6 +66,15 @@ interface ViewEngineInterface
      * @return static
      */
     public function setDelegateMixin(string $mixin): ViewEngineInterface;
+
+    /**
+     * Définition de la classe de chargement des gabarits d'affichage.
+     *
+     * @param string $loader
+     *
+     * @return static
+     */
+    public function setLoader(string $loader): ViewEngineInterface;
 
     /**
      * Définition d'une variable partagée passée à l'ensemble des gabarits

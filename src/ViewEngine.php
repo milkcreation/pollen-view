@@ -6,11 +6,14 @@ namespace Pollen\View;
 
 use BadMethodCallException;
 use League\Plates\Engine as BaseViewEngine;
+use Pollen\Support\Proxy\ContainerProxy;
 use Throwable;
 use RuntimeException;
 
 class ViewEngine extends BaseViewEngine implements ViewEngineInterface
 {
+    use ContainerProxy;
+
     /**
      * Instance de la classe de délégation d'appel de méthodes.
      * @var object|null
@@ -24,13 +27,25 @@ class ViewEngine extends BaseViewEngine implements ViewEngineInterface
     protected $delegatedMixins = [];
 
     /**
+     * Classe de chargement des gabarits d'affichage.
+     * @return string
+     */
+    protected $loader = ViewLoader::class;
+
+    /**
      * {@inheritDoc}
      *
-     * @return ViewTemplateInterface
+     * @return ViewLoaderInterface
      */
-    public function make($name): ViewTemplateInterface
+    public function make($name): ViewLoaderInterface
     {
-        return new ViewTemplate($this, $name);
+        $loader = new $this->loader($this, $name);
+
+        if ($container = $this->getContainer()) {
+            $loader->setContainer($container);
+        }
+
+        return $loader;
     }
 
     /**
@@ -95,6 +110,16 @@ class ViewEngine extends BaseViewEngine implements ViewEngineInterface
     public function setDelegateMixin(string $mixin): ViewEngineInterface
     {
         $this->delegatedMixins[] = $mixin;
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setLoader(string $loader): ViewEngineInterface
+    {
+        $this->loader = $loader;
 
         return $this;
     }

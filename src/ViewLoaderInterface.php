@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Pollen\View;
 
 use League\Plates\Engine;
+use Pollen\Support\Proxy\ContainerProxyInterface;
 
 /**
  * @mixin \League\Plates\Template\Template
  */
-interface ViewTemplateInterface
+interface ViewLoaderInterface extends ContainerProxyInterface
 {
     /**
      * Récupération de la liste des paramètres.
