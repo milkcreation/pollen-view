@@ -20,8 +20,8 @@ class ViewServiceProvider extends BaseServiceProvider
      */
     public function register(): void
     {
-        $this->getContainer()->share(ViewEngineInterface::class, function () {
-            return new ViewEngine(get_template_directory());
+        $this->getContainer()->add(ViewEngineInterface::class, function () {
+            return (new ViewEngine())->setContainer($this->getContainer());
         });
     }
 }

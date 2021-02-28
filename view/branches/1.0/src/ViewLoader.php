@@ -7,22 +7,16 @@ namespace Pollen\View;
 use Pollen\Support\Arr;
 use Pollen\Support\HtmlAttrs;
 use League\Plates\Template\Template;
+use Pollen\Support\Proxy\ContainerProxy;
 
-class ViewTemplate extends Template implements ViewTemplateInterface
+class ViewLoader extends Template implements ViewLoaderInterface
 {
+    use ContainerProxy;
+
     /**
      * @var ViewEngineInterface
      */
     protected $engine;
-
-    /**
-     * @param ViewEngine $engine
-     * @param string $name
-     */
-    public function __construct(ViewEngine $engine, string $name)
-    {
-        parent::__construct($engine, $name);
-    }
 
     /**
      * @inheritDoc
