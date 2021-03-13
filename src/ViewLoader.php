@@ -58,6 +58,6 @@ class ViewLoader extends Template implements ViewLoaderInterface
      */
     public function htmlAttrs(?array $attrs = null, bool $linearized = true)
     {
-        return HtmlAttrs::createFromAttrs(is_array($attrs) ? $attrs : $this->get('attrs', []), $linearized);
+        return HtmlAttrs::createFromAttrs($attrs ?? $this->get('attrs', []), $linearized);
     }
 }
