@@ -6,6 +6,7 @@ namespace Pollen\View;
 
 use BadMethodCallException;
 use League\Plates\Engine as BaseViewEngine;
+use LogicException;
 use Pollen\Support\Proxy\ContainerProxy;
 use Throwable;
 use RuntimeException;
@@ -33,17 +34,39 @@ class ViewEngine extends BaseViewEngine implements ViewEngineInterface
     protected $loader = ViewLoader::class;
 
     /**
+     * @inheritDoc
+     */
+    public function exists($name): bool
+    {
+        try {
+            return parent::exists($this->getFolders()->exists('_override_dir') ? "_override_dir::{$name}" : $name);
+        } catch (LogicException $e) {
+            throw $e;
+        }
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @return ViewLoaderInterface
      */
     public function make($name): ViewLoaderInterface
     {
+        $regex = '\:\:';
+        if (!preg_match("/{$regex}/", $name)) {
+            $name = $this->getFolders()->exists('_override_dir') ? "_override_dir::{$name}" : $name;
+        }
+
         $loader = new $this->loader($this, $name);
 
         if ($container = $this->getContainer()) {
             $loader->setContainer($container);
         }
+
+        //if ($name === 'html/body') {
+        //    var_dump($loader);
+        //}
+
 
         return $loader;
     }
