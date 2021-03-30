@@ -63,11 +63,6 @@ class ViewEngine extends BaseViewEngine implements ViewEngineInterface
             $loader->setContainer($container);
         }
 
-        //if ($name === 'html/body') {
-        //    var_dump($loader);
-        //}
-
-
         return $loader;
     }
 

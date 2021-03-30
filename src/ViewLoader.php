@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Pollen\View;
 
 use Pollen\Support\Arr;
-use Pollen\Support\HtmlAttrs;
+use Pollen\Support\Html;
 use League\Plates\Template\Template;
 use Pollen\Support\Proxy\ContainerProxy;
 
@@ -58,6 +58,8 @@ class ViewLoader extends Template implements ViewLoaderInterface
      */
     public function htmlAttrs(?array $attrs = null, bool $linearized = true)
     {
-        return HtmlAttrs::createFromAttrs($attrs ?? $this->get('attrs', []), $linearized);
+        $attr = $attrs ?? $this->get('attrs', []);
+
+        return $linearized ? Html::attr($attr) : $attr;
     }
 }

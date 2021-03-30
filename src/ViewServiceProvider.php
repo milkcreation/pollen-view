@@ -21,7 +21,10 @@ class ViewServiceProvider extends BaseServiceProvider
     public function register(): void
     {
         $this->getContainer()->add(ViewEngineInterface::class, function () {
-            return (new ViewEngine())->setContainer($this->getContainer());
+            $viewEngine = new ViewEngine();
+            $viewEngine->setContainer($this->getContainer());
+
+            return $viewEngine;
         });
     }
 }
