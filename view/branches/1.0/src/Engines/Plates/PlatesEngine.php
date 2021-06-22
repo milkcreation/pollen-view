@@ -2,36 +2,35 @@
 
 declare(strict_types=1);
 
-namespace Pollen\View;
+namespace Pollen\View\Engines\Plates;
 
+use League\Plates\Engine as BasePlatesEngine;
 use BadMethodCallException;
-use League\Plates\Engine as BaseViewEngine;
 use LogicException;
 use Pollen\Support\Proxy\ContainerProxy;
-use Throwable;
 use RuntimeException;
+use Throwable;
 
-class ViewEngine extends BaseViewEngine implements ViewEngineInterface
+class PlatesEngine extends BasePlatesEngine
 {
     use ContainerProxy;
 
     /**
      * Instance de la classe de délégation d'appel de méthodes.
-     * @var object|null
      */
-    protected $delegate;
+    protected ?object $delegate = null;
 
     /**
      * Liste des méthodes de délégations permises.
-     * @var array
+     * @var string[]
      */
-    protected $delegatedMixins = [];
+    protected array $delegatedMixins = [];
 
     /**
      * Classe de chargement des gabarits d'affichage.
      * @return string
      */
-    protected $loader = ViewLoader::class;
+    protected string $templateClass = PlatesTemplate::class;
 
     /**
      * @inheritDoc
@@ -39,35 +38,43 @@ class ViewEngine extends BaseViewEngine implements ViewEngineInterface
     public function exists($name): bool
     {
         try {
-            return parent::exists($this->getFolders()->exists('_override_dir') ? "_override_dir::{$name}" : $name);
+            return parent::exists($this->getFolders()->exists('_override_dir') ? "_override_dir::$name" : $name);
         } catch (LogicException $e) {
             throw $e;
         }
     }
 
     /**
-     * {@inheritDoc}
+     * @param string $name
      *
-     * @return ViewLoaderInterface
+     * @return PlatesTemplate
      */
-    public function make($name): ViewLoaderInterface
+    public function make($name): PlatesTemplate
     {
-        $regex = '\:\:';
-        if (!preg_match("/{$regex}/", $name)) {
-            $name = $this->getFolders()->exists('_override_dir') ? "_override_dir::{$name}" : $name;
+        $regex = <<< REGEXP
+        \:\:
+        REGEXP;
+
+        if (!preg_match("/$regex/", $name)) {
+            $name = $this->getFolders()->exists('_override_dir') ? "_override_dir::$name" : $name;
         }
 
-        $loader = new $this->loader($this, $name);
+        $template = new $this->templateClass($this, $name);
 
         if ($container = $this->getContainer()) {
-            $loader->setContainer($container);
+            $template->setContainer($container);
         }
 
-        return $loader;
+        return $template;
     }
 
     /**
-     * @inheritDoc
+     * Appel d'une méthode de délégation.
+     *
+     * @param string $method
+     * @param array $args
+     *
+     * @return mixed
      */
     public function callDelegate(string $method, array $args)
     {
@@ -89,7 +96,11 @@ class ViewEngine extends BaseViewEngine implements ViewEngineInterface
     }
 
     /**
-     * @inheritDoc
+     * Vérification des permissions d'appel d'une methode de délégation.
+     *
+     * @param string $mixin
+     *
+     * @return bool
      */
     public function canDelegate(string $mixin): bool
     {
@@ -97,7 +108,9 @@ class ViewEngine extends BaseViewEngine implements ViewEngineInterface
     }
 
     /**
-     * @inheritDoc
+     * Vérification d'existence d'une classe de délégation.
+     *
+     * @return bool
      */
     public function hasDelegate(): bool
     {
@@ -105,7 +118,9 @@ class ViewEngine extends BaseViewEngine implements ViewEngineInterface
     }
 
     /**
-     * @inheritDoc
+     * Récupération de la classe de délégation.
+     *
+     * @return object|null
      */
     public function getDelegate(): ?object
     {
@@ -113,9 +128,13 @@ class ViewEngine extends BaseViewEngine implements ViewEngineInterface
     }
 
     /**
-     * @inheritDoc
+     * Déclaration d'un instance de délégation d'appel de méthodes.
+     *
+     * @param object $delegate
+     *
+     * @return static
      */
-    public function setDelegate(object $delegate): ViewEngineInterface
+    public function setDelegate(object $delegate): self
     {
         $this->delegate = $delegate;
 
@@ -123,9 +142,13 @@ class ViewEngine extends BaseViewEngine implements ViewEngineInterface
     }
 
     /**
-     * @inheritDoc
+     * Déclaration d'une méthode de délégation.
+     *
+     * @param string $mixin
+     *
+     * @return static
      */
-    public function setDelegateMixin(string $mixin): ViewEngineInterface
+    public function setDelegateMixin(string $mixin): self
     {
         $this->delegatedMixins[] = $mixin;
 
@@ -133,21 +156,15 @@ class ViewEngine extends BaseViewEngine implements ViewEngineInterface
     }
 
     /**
-     * @inheritDoc
+     * Définition de la classe de chargement des gabarits d'affichage.
+     *
+     * @param string $templateClass
+     *
+     * @return static
      */
-    public function setLoader(string $loader): ViewEngineInterface
+    public function setTemplateClass(string $templateClass): self
     {
-        $this->loader = $loader;
-
-        return $this;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function share(string $key, $value = null): ViewEngineInterface
-    {
-        $this->addData([$key => $value]);
+        $this->templateClass = $templateClass;
 
         return $this;
     }
