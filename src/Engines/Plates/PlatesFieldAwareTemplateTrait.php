@@ -2,20 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Pollen\View;
+namespace Pollen\View\Engines\Plates;
 
 use Pollen\Field\FieldManager;
 use Pollen\Field\FieldManagerInterface;
 use Psr\Container\ContainerInterface as Container;
 use RuntimeException;
 
-trait FieldAwareViewLoader
+trait PlatesFieldAwareTemplateTrait
 {
     /**
      * Instance du gestionnaire de champs.
-     * @var FieldManagerInterface
      */
-    private $fieldManager;
+    private ?FieldManagerInterface $fieldManager = null;
 
     /**
      * Rendu d'un champ.
@@ -41,6 +40,6 @@ trait FieldAwareViewLoader
                 }
             }
         }
-        return (string)$this->fieldManager->get($alias, $idOrParams, $params);
+        return $this->fieldManager->get($alias, $idOrParams, $params)->render();
     }
 }

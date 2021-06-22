@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Pollen\View;
+namespace Pollen\View\Engines\Plates;
 
 use Pollen\Support\Arr;
 use Pollen\Support\Html;
 use League\Plates\Template\Template;
 use Pollen\Support\Proxy\ContainerProxy;
 
-class ViewLoader extends Template implements ViewLoaderInterface
+class PlatesTemplate extends Template
 {
     use ContainerProxy;
 
     /**
-     * @var ViewEngineInterface
+     * @var PlatesViewEngine
      */
     protected $engine;
 
@@ -30,7 +30,9 @@ class ViewLoader extends Template implements ViewLoaderInterface
     }
 
     /**
-     * @inheritDoc
+     * Récupération de la liste des paramètres.
+     *
+     * @return array
      */
     public function all(): array
     {
@@ -38,7 +40,12 @@ class ViewLoader extends Template implements ViewLoaderInterface
     }
 
     /**
-     * @inheritDoc
+     * Récupération de paramètres.
+     *
+     * @param string $key Clé d'indexe de l'attribut. Syntaxe à point permise.
+     * @param mixed|null $default Valeur de retour par défaut.
+     *
+     * @return mixed
      */
     public function get(string $key, $default = null)
     {
@@ -46,15 +53,22 @@ class ViewLoader extends Template implements ViewLoaderInterface
     }
 
     /**
-     * @inheritDoc
+     * Récupération de l'instance du moteur de gabarit d'affichage.
+     *
+     * @return PlatesViewEngine
      */
-    public function getEngine(): ViewEngineInterface
+    protected function getEngine(): PlatesViewEngine
     {
         return $this->engine;
     }
 
     /**
-     * @inheritDoc
+     * Récupération|Linéarisation d'attributs HTML.
+     *
+     * @param array|null $attrs Liste des attributs HTML.
+     * @param bool $linearized Activation de la linéarisation.
+     *
+     * @return string|array
      */
     public function htmlAttrs(?array $attrs = null, bool $linearized = true)
     {

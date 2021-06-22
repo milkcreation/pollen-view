@@ -2,20 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Pollen\View;
+namespace Pollen\View\Engines\Plates;
 
 use Pollen\Partial\PartialManager;
 use Pollen\Partial\PartialManagerInterface;
 use Psr\Container\ContainerInterface as Container;
 use RuntimeException;
 
-trait PartialAwareViewLoader
+trait PlatesPartialAwareTemplateTrait
 {
     /**
      * Instance du gestionnaire de portions d'affichage.
-     * @var PartialManagerInterface
      */
-    private $partialManager;
+    private ?PartialManagerInterface $partialManager = null;
 
     /**
      * Rendu d'une portion d'affichage.
@@ -41,6 +40,7 @@ trait PartialAwareViewLoader
                 }
             }
         }
-        return (string)$this->partialManager->get($alias, $idOrParams, $params);
+
+        return $this->partialManager->get($alias, $idOrParams, $params)->render();
     }
 }
