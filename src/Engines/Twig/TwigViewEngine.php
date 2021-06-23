@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pollen\View\Engines\Twig;
 
+use Pollen\View\AbstractViewEngine;
 use Twig\Environment as TwigEnvironment;
 use Pollen\Support\Proxy\ContainerProxy;
 use Pollen\View\ViewEngineInterface;
@@ -12,8 +13,9 @@ use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 use Twig\Loader\ChainLoader;
 use Twig\Loader\FilesystemLoader;
+use Twig\TwigFunction;
 
-class TwigViewEngine implements ViewEngineInterface
+class TwigViewEngine extends AbstractViewEngine
 {
     use ContainerProxy;
 
@@ -30,16 +32,34 @@ class TwigViewEngine implements ViewEngineInterface
      */
     private TwigEnvironment $twigEnvironment;
 
-    public function __construct()
+    public function __construct(array $options = [])
     {
         $this->loader = new ChainLoader();
 
-        $this->twigEnvironment = new TwigEnvironment(new ChainLoader());
+        $this->twigEnvironment = new TwigEnvironment(new ChainLoader(), $options);
     }
 
+    /**
+     * @param string $method
+     * @param array $parameters
+     *
+     * @return mixed
+     */
     public function __call(string $method, array $parameters)
     {
         return $this->twigEnvironment->$method(...$parameters);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addFunction(string $name, callable $function): ViewEngineInterface
+    {
+        $this->twigEnvironment->addFunction(
+            !$function instanceof TwigFunction ? new TwigFunction($name, $function) : $function
+        );
+
+        return $this;
     }
 
     /**

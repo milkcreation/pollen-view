@@ -7,6 +7,14 @@ namespace Pollen\View;
 interface ViewInterface
 {
     /**
+     * @param string $name
+     * @param callable $function
+     *
+     * @return ViewInterface
+     */
+    public function addFunction(string $name, callable $function): ViewInterface;
+
+    /**
      * @return ViewEngineInterface
      */
     public function getEngine(): ViewEngineInterface;

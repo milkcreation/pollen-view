@@ -7,12 +7,12 @@ namespace Pollen\View\Exception;
 use RuntimeException;
 use Throwable;
 
-class UnableCreateEngineException extends RuntimeException
+class UnableCreateViewException extends RuntimeException
 {
     public function __construct($message = "", $code = 0, Throwable $previous = null)
     {
         if (empty($message)) {
-            $message = 'Unable to create view engine';
+            $message = 'Unable to create view.';
         }
 
         parent::__construct($message, $code, $previous);
