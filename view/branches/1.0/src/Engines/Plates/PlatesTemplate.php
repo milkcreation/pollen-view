@@ -14,7 +14,7 @@ class PlatesTemplate extends Template
     use ContainerProxy;
 
     /**
-     * @var PlatesViewEngine
+     * @var PlatesEngine
      */
     protected $engine;
 
@@ -55,9 +55,9 @@ class PlatesTemplate extends Template
     /**
      * Récupération de l'instance du moteur de gabarit d'affichage.
      *
-     * @return PlatesViewEngine
+     * @return PlatesEngine
      */
-    protected function getEngine(): PlatesViewEngine
+    protected function getEngine(): PlatesEngine
     {
         return $this->engine;
     }

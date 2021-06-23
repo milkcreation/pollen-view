@@ -4,8 +4,18 @@ declare(strict_types=1);
 
 namespace Pollen\View;
 
-interface ViewEngineInterface
+use Pollen\Support\Proxy\ContainerProxyInterface;
+
+interface ViewEngineInterface extends ContainerProxyInterface
 {
+    /**
+     * @param string $name
+     * @param callable $function
+     *
+     * @return static
+     */
+    public function addFunction(string $name, callable $function): ViewEngineInterface;
+
     /**
      * @param string $name
      *

@@ -12,7 +12,8 @@ class ViewServiceProvider extends BootableServiceProvider
      * @inheritDoc
      */
     protected $provides = [
-        ViewInterface::class
+        ViewInterface::class,
+        ViewManagerInterface::class
     ];
 
     /**
@@ -20,11 +21,15 @@ class ViewServiceProvider extends BootableServiceProvider
      */
     public function register(): void
     {
-        $this->getContainer()->add(ViewInterface::class, function () {
-            $viewEngine = new View();
-            $viewEngine->setContainer($this->getContainer());
+        $this->getContainer()->share(ViewManagerInterface::class, function () {
+            return new ViewManager([], $this->getContainer());
+        });
 
-            return $viewEngine;
+        $this->getContainer()->share(ViewInterface::class, function () {
+            /** @var ViewManagerInterface $viewManager */
+            $viewManager = $this->getContainer()->get(ViewManagerInterface::class);
+
+            return $viewManager->getDefaultView();
         });
     }
 }

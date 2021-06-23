@@ -11,3 +11,49 @@ Pollen **View** Component is a Template engine system.
 ```bash
 composer require pollen-solutions/view
 ```
+
+## Creating View
+
+### Standard Method
+
+```php
+
+```
+
+### Callback Method
+
+```php
+use Pollen\View\ViewManager;
+use Pollen\View\Engines\Plates\PlatesViewEngine;
+
+$viewManager = new ViewManager();
+
+$view = $viewManager->createView(
+    'plates',
+    [],
+    function (PlatesViewEngine $platesViewEngine) use ($directory, $overrideDir) {
+        $platesViewEngine
+            ->setDirectory($directory);
+
+        if ($overrideDir !== null) {
+            $platesViewEngine->setOverrideDir($overrideDir);
+        }
+
+        $mixins = [
+            'after',
+            'attrs',
+            'before',
+            'content',
+            'getAlias',
+            'getId',
+            'getIndex',
+        ];
+
+        foreach ($mixins as $mixin) {
+            $platesViewEngine->setDelegateMixin($mixin);
+        }
+
+        return $platesViewEngine;
+    }
+);
+```

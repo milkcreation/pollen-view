@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace Pollen\View;
 
-use Pollen\View\Engines\Plates\PlatesViewEngine;
-use Pollen\View\Engines\Twig\TwigViewEngine;
-use Pollen\View\Exception\UnableCreateEngineException;
-
 class View implements ViewInterface
 {
     protected ViewEngineInterface $viewEngine;
@@ -21,35 +17,13 @@ class View implements ViewInterface
     }
 
     /**
-     * @param callable $engineCallback
-     *
-     * @return static
+     * @inheritDoc
      */
-    public static function createFromPlates(callable $engineCallback): self
+    public function addFunction(string $name, callable $function): ViewInterface
     {
-        $plateEngine = $engineCallback(new PlatesViewEngine());
+        $this->getEngine()->addFunction($name, $function);
 
-        if ($plateEngine instanceof PlatesViewEngine) {
-            return new static($plateEngine);
-        }
-
-        throw new UnableCreateEngineException('Unable create View from PlatesViewEngine');
-    }
-
-    /**
-     * @param callable $engineCallback
-     *
-     * @return static
-     */
-    public static function createFromTwig(callable $engineCallback): self
-    {
-        $twigEngine = $engineCallback(new TwigViewEngine());
-
-        if ($twigEngine instanceof TwigViewEngine) {
-            return new static($twigEngine);
-        }
-
-        throw new UnableCreateEngineException('Unable create View from TwigViewEngine');
+        return $this;
     }
 
     /**
@@ -65,7 +39,7 @@ class View implements ViewInterface
      */
     public function render(string $name, array $datas = []) : string
     {
-        return $this->viewEngine->render($name, $datas);
+        return $this->getEngine()->render($name, $datas);
     }
 
     /**
@@ -73,7 +47,7 @@ class View implements ViewInterface
      */
     public function setDirectory(string $directory): ViewInterface
     {
-        $this->viewEngine->setDirectory($directory);
+        $this->getEngine()->setDirectory($directory);
 
         return $this;
     }
@@ -83,7 +57,7 @@ class View implements ViewInterface
      */
     public function setOverrideDir(string $overrideDir): ViewInterface
     {
-        $this->viewEngine->setOverrideDir($overrideDir);
+        $this->getEngine()->setOverrideDir($overrideDir);
 
         return $this;
     }

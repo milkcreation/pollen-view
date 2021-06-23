@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Pollen\View\Engines\Plates;
 
 use Pollen\Support\Proxy\ContainerProxy;
+use Pollen\View\AbstractViewEngine;
 use Pollen\View\ViewEngineInterface;
 
 /**
  * @mixin PlatesEngine
  */
-class PlatesViewEngine implements ViewEngineInterface
+class PlatesViewEngine extends AbstractViewEngine
 {
     use ContainerProxy;
 
@@ -19,14 +20,33 @@ class PlatesViewEngine implements ViewEngineInterface
      */
     private PlatesEngine $platesEngine;
 
-    public function __construct()
+    /**
+     * @param string $fileExtension
+     */
+    public function __construct(string $fileExtension = 'plates.php')
     {
-        $this->platesEngine = new PlatesEngine(null, 'plates.php');
+        $this->platesEngine = new PlatesEngine(null, $fileExtension);
     }
 
+    /**
+     * @param string $method
+     * @param array $parameters
+     *
+     * @return mixed
+     */
     public function __call(string $method, array $parameters)
     {
         return $this->platesEngine->$method(...$parameters);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addFunction(string $name, callable $function): ViewEngineInterface
+    {
+        $this->platesEngine->registerFunction($name, $function);
+
+        return $this;
     }
 
     /**
