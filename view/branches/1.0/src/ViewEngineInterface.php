@@ -32,6 +32,13 @@ interface ViewEngineInterface extends ContainerProxyInterface
     public function render(string $name, array $datas = []): string;
 
     /**
+     * @param string $cacheDir
+     *
+     * @return static
+     */
+    public function setCacheDir(string $cacheDir): ViewEngineInterface;
+
+    /**
      * @param string $directory
      *
      * @return static

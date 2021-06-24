@@ -68,6 +68,14 @@ class PlatesViewEngine extends AbstractViewEngine
     /**
      * @inheritDoc
      */
+    public function setCacheDir(string $cacheDir): ViewEngineInterface
+    {
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function setDirectory(string $directory): ViewEngineInterface
     {
         $this->platesEngine->setDirectory($directory);
