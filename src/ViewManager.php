@@ -26,7 +26,7 @@ class ViewManager implements ViewManagerInterface
 
     protected ?ViewInterface $defaultView = null;
 
-    protected string $defaultViewEngineClass = PlatesViewEngine::class;
+    protected string $defaultViewEngineName = 'plates';
 
     /**
      * @var array|string[]
@@ -35,6 +35,11 @@ class ViewManager implements ViewManagerInterface
         'plates' => PlatesViewEngine::class,
         'twig'   => TwigViewEngine::class,
     ];
+
+    /**
+     * @var array<string, callable>
+     */
+    protected array $sharedFunctions = [];
 
     /**
      * @param array $config
@@ -79,6 +84,8 @@ class ViewManager implements ViewManagerInterface
     }
 
     /**
+     * Create a new view instance.
+     *
      * @param string|ViewEngineInterface|null $viewEngineDef
      * @param array $args
      * @param Closure|null $engineCallback
@@ -113,10 +120,18 @@ class ViewManager implements ViewManagerInterface
         }
 
         try {
-            return new View($viewEngine);
+            $view = new View($viewEngine);
         } catch (Throwable $e) {
             throw new UnableCreateViewException();
         }
+
+        if ($functions = $this->sharedFunctions) {
+            foreach ($functions as $name => $callable) {
+                $view->addFunction($name, $callable);
+            }
+        }
+
+        return $view;
     }
 
     /**
@@ -125,7 +140,7 @@ class ViewManager implements ViewManagerInterface
     public function getDefaultView(): ViewInterface
     {
         if ($this->defaultView === null) {
-            $this->defaultView = new View($this->resolveViewEngine());
+            $this->defaultView = $this->createView();
 
             $this->defaultView->setDirectory(getcwd());
         }
@@ -134,6 +149,8 @@ class ViewManager implements ViewManagerInterface
     }
 
     /**
+     * Registrer a view engine.
+     *
      * @param string $name
      * @param string $classname
      * @param bool $asDefault
@@ -145,13 +162,15 @@ class ViewManager implements ViewManagerInterface
         $this->viewEngines[$name] = $classname;
 
         if ($asDefault) {
-            $this->defaultViewEngineClass = $classname;
+            $this->defaultViewEngineName = $name;
         }
 
         return $this;
     }
 
     /**
+     * Resolve view engine.
+     *
      * @param string|null $name
      * @param ...$args
      *
@@ -160,7 +179,7 @@ class ViewManager implements ViewManagerInterface
     protected function resolveViewEngine(?string $name = null, ...$args): ViewEngineInterface
     {
         if ($name === null) {
-            $viewEngineClass = $this->defaultViewEngineClass;
+            $viewEngineClass = $this->viewEngines[$this->defaultViewEngineName] ?? null;
         } else {
             $viewEngineClass = $this->viewEngines[$name] ?? null;
         }
@@ -179,8 +198,28 @@ class ViewManager implements ViewManagerInterface
         return $viewEngine;
     }
 
+    /**
+     * @inheritDoc
+     */
+    public function setDefault(string $name): ViewManagerInterface
+    {
+        $this->defaultViewEngineName = $name;
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setSharedFunction(string $name, callable $function): ViewManagerInterface
+    {
+        $this->sharedFunctions[$name] = $function;
+
+        return $this;
+    }
+
+    // View Methods
     // -----------------------------------------------------------------------------------------------------------------
-    // View
 
     /**
      * @inheritDoc
@@ -211,6 +250,16 @@ class ViewManager implements ViewManagerInterface
     /**
      * @inheritDoc
      */
+    public function setCacheDir(?string $cacheDir = null): ViewInterface
+    {
+        $this->getDefaultView()->setCacheDir($cacheDir);
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function setDirectory(string $directory): ViewInterface
     {
         return $this->getDefaultView()->setDirectory($directory);
@@ -222,5 +271,13 @@ class ViewManager implements ViewManagerInterface
     public function setOverrideDir(string $overrideDir): ViewInterface
     {
         return $this->getDefaultView()->setOverrideDir($overrideDir);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function share($key, $value = null): ViewInterface
+    {
+        return $this->getDefaultView()->share($key, $value);
     }
 }

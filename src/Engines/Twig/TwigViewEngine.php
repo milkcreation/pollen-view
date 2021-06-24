@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pollen\View\Engines\Twig;
 
 use Pollen\View\AbstractViewEngine;
+use Pollen\View\Exception\MustHaveTemplateDirException;
 use Twig\Environment as TwigEnvironment;
 use Pollen\Support\Proxy\ContainerProxy;
 use Pollen\View\ViewEngineInterface;
@@ -19,27 +20,19 @@ class TwigViewEngine extends AbstractViewEngine
 {
     use ContainerProxy;
 
-    protected bool $loaderChanged = true;
+    protected string $extension = "html.twig";
 
-    protected ?ChainLoader $loader = null;
+    protected bool $pathsChanged = true;
 
-    protected ?FilesystemLoader $directoryLoader = null;
+    protected ?string $directory = null;
 
-    protected ?FilesystemLoader $overrideLoader = null;
+    protected ?string $overrideDir = null;
 
-    /**
-     * @var TwigEnvironment
-     */
-    private TwigEnvironment $twigEnvironment;
-
-    public function __construct(array $options = [])
-    {
-        $this->loader = new ChainLoader();
-
-        $this->twigEnvironment = new TwigEnvironment(new ChainLoader(), $options);
-    }
+    private ?TwigEnvironment $twigEnvironment = null;
 
     /**
+     * Call Twig Environment delegate method.
+     *
      * @param string $method
      * @param array $parameters
      *
@@ -47,7 +40,7 @@ class TwigViewEngine extends AbstractViewEngine
      */
     public function __call(string $method, array $parameters)
     {
-        return $this->twigEnvironment->$method(...$parameters);
+        return $this->twigEnvironment()->$method(...$parameters);
     }
 
     /**
@@ -55,7 +48,7 @@ class TwigViewEngine extends AbstractViewEngine
      */
     public function addFunction(string $name, callable $function): ViewEngineInterface
     {
-        $this->twigEnvironment->addFunction(
+        $this->twigEnvironment()->addFunction(
             !$function instanceof TwigFunction ? new TwigFunction($name, $function) : $function
         );
 
@@ -77,14 +70,12 @@ class TwigViewEngine extends AbstractViewEngine
      */
     public function render(string $name, array $datas = []): string
     {
-        if ($this->loaderChanged) {
-            $this->setLoader();
-        }
+        $this->twigPathsLoad();
 
-        $name = "$name.html.twig";
+        $name = "$name.$this->extension";
 
         try {
-            return $this->twigEnvironment->render($name, $datas);
+            return $this->twigEnvironment()->render($name, $datas);
         } catch (LoaderError | RuntimeError | SyntaxError $e) {
             return $e->getMessage();
         }
@@ -93,9 +84,13 @@ class TwigViewEngine extends AbstractViewEngine
     /**
      * @inheritDoc
      */
-    public function setCacheDir(string $cacheDir): ViewEngineInterface
+    public function setCacheDir(?string $cacheDir = null): ViewEngineInterface
     {
-        $this->twigEnvironment->setCache($cacheDir);
+        if ($cacheDir !== null) {
+            $this->twigEnvironment()->setCache($cacheDir);
+        } else {
+            $this->twigEnvironment()->setCache(false);
+        }
 
         return $this;
     }
@@ -105,22 +100,10 @@ class TwigViewEngine extends AbstractViewEngine
      */
     public function setDirectory(string $directory): ViewEngineInterface
     {
-        $this->directoryLoader = new FilesystemLoader($directory);
-        $this->loaderChanged = true;
+        $this->directory = $directory;
+        $this->pathsChanged = true;
 
         return $this;
-    }
-
-    protected function setLoader(): void
-    {
-        if ($this->overrideLoader) {
-            $loaders = [$this->overrideLoader, $this->directoryLoader];
-        } else {
-            $loaders = [$this->directoryLoader];
-        }
-
-        $this->twigEnvironment->setLoader(new ChainLoader($loaders));
-        $this->loaderChanged = false;
     }
 
     /**
@@ -128,8 +111,8 @@ class TwigViewEngine extends AbstractViewEngine
      */
     public function setOverrideDir(string $overrideDir): ViewEngineInterface
     {
-        $this->overrideLoader = new FilesystemLoader($overrideDir);
-        $this->loaderChanged = true;
+        $this->overrideDir = $overrideDir;
+        $this->pathsChanged = true;
 
         return $this;
     }
@@ -137,10 +120,51 @@ class TwigViewEngine extends AbstractViewEngine
     /**
      * @inheritDoc
      */
-    public function share(string $key, $value = null): ViewEngineInterface
+    public function share($key, $value = null): ViewEngineInterface
     {
-        $this->twigEnvironment->addGlobal($key, $value);
+        $keys = is_array($key) ? $key : [$key => $value];
+
+        foreach($keys as $k => $v) {
+            $this->twigEnvironment()->addGlobal($k, $v);
+        }
 
         return $this;
+    }
+
+    /**
+     * Get|Instantiate Twig Environment.
+     *
+     * @return TwigEnvironment
+     */
+    protected function twigEnvironment(): TwigEnvironment
+    {
+        if ($this->twigEnvironment === null) {
+            $this->twigEnvironment = new TwigEnvironment(new ChainLoader(), $this->options);
+        }
+        return $this->twigEnvironment;
+    }
+
+    /**
+     * Load Twig Paths.
+     *
+     * @return void
+     */
+    protected function twigPathsLoad(): void
+    {
+        if ($this->pathsChanged) {
+            if ($this->directory === null) {
+                throw new MustHaveTemplateDirException(self::class);
+            }
+
+            $loaders = [];
+            if ($this->overrideDir) {
+                $loaders[] = new FilesystemLoader($this->overrideDir);
+            }
+
+            $loaders[] = new FilesystemLoader($this->directory);
+
+            $this->twigEnvironment()->setLoader(new ChainLoader($loaders));
+            $this->pathsChanged = false;
+        }
     }
 }

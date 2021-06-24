@@ -9,7 +9,7 @@ use Pollen\Support\Html;
 use League\Plates\Template\Template;
 use Pollen\Support\Proxy\ContainerProxy;
 
-class PlatesTemplate extends Template
+class PlatesTemplate extends Template implements PlatesTemplateInterface
 {
     use ContainerProxy;
 
@@ -21,31 +21,13 @@ class PlatesTemplate extends Template
     /**
      * @inheritDoc
      */
-    public function __call($name, $arguments)
-    {
-        if ($this->engine->canDelegate($name)) {
-            return $this->engine->callDelegate($name, $arguments);
-        }
-        return parent::__call($name, $arguments);
-    }
-
-    /**
-     * Récupération de la liste des paramètres.
-     *
-     * @return array
-     */
     public function all(): array
     {
         return $this->data;
     }
 
     /**
-     * Récupération de paramètres.
-     *
-     * @param string $key Clé d'indexe de l'attribut. Syntaxe à point permise.
-     * @param mixed|null $default Valeur de retour par défaut.
-     *
-     * @return mixed
+     * @inheritDoc
      */
     public function get(string $key, $default = null)
     {
@@ -53,22 +35,7 @@ class PlatesTemplate extends Template
     }
 
     /**
-     * Récupération de l'instance du moteur de gabarit d'affichage.
-     *
-     * @return PlatesEngine
-     */
-    protected function getEngine(): PlatesEngine
-    {
-        return $this->engine;
-    }
-
-    /**
-     * Récupération|Linéarisation d'attributs HTML.
-     *
-     * @param array|null $attrs Liste des attributs HTML.
-     * @param bool $linearized Activation de la linéarisation.
-     *
-     * @return string|array
+     * @inheritDoc
      */
     public function htmlAttrs(?array $attrs = null, bool $linearized = true)
     {

@@ -45,6 +45,16 @@ class View implements ViewInterface
     /**
      * @inheritDoc
      */
+    public function setCacheDir(?string $cacheDir = null): ViewInterface
+    {
+        $this->getEngine()->setCacheDir($cacheDir);
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function setDirectory(string $directory): ViewInterface
     {
         $this->getEngine()->setDirectory($directory);
@@ -58,6 +68,16 @@ class View implements ViewInterface
     public function setOverrideDir(string $overrideDir): ViewInterface
     {
         $this->getEngine()->setOverrideDir($overrideDir);
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function share($key, $value = null): ViewInterface
+    {
+        $this->getEngine()->share($key, $value);
 
         return $this;
     }
