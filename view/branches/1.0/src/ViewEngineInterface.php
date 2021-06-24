@@ -9,6 +9,8 @@ use Pollen\Support\Proxy\ContainerProxyInterface;
 interface ViewEngineInterface extends ContainerProxyInterface
 {
     /**
+     * Add a template function.
+     *
      * @param string $name
      * @param callable $function
      *
@@ -24,6 +26,8 @@ interface ViewEngineInterface extends ContainerProxyInterface
     public function exists(string $name): bool;
 
     /**
+     * Return a view template.
+     *
      * @param string $name
      * @param array $datas
      *
@@ -32,31 +36,39 @@ interface ViewEngineInterface extends ContainerProxyInterface
     public function render(string $name, array $datas = []): string;
 
     /**
-     * @param string $cacheDir
+     * Set template cache directory.
+     *
+     * @param string|null $cacheDir Absolute path of templates cache directory.
      *
      * @return static
      */
-    public function setCacheDir(string $cacheDir): ViewEngineInterface;
+    public function setCacheDir(?string $cacheDir = null): ViewEngineInterface;
 
     /**
-     * @param string $directory
+     * Set template directory.
+     *
+     * @param string $directory Absolute path of templates directory.
      *
      * @return static
      */
     public function setDirectory(string $directory): ViewEngineInterface;
 
     /**
-     * @param string $overrideDir
+     * Set template override directory.
+     *
+     * @param string $overrideDir Absolute path of override templates directory.
      *
      * @return static
      */
     public function setOverrideDir(string $overrideDir): ViewEngineInterface;
 
     /**
-     * @param string $key
+     * Add a piece of shared data to all templates.
+     *
+     * @param string|array $key
      * @param mixed $value
      *
      * @return static
      */
-    public function share(string $key, $value): ViewEngineInterface;
+    public function share($key, $value = null): ViewEngineInterface;
 }

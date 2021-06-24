@@ -50,4 +50,13 @@ interface ViewManagerInterface extends
      * @return static
      */
     public function registerViewEngine(string $name, string $classname, bool $asDefault = false): ViewManagerInterface;
+
+    /**
+     * Set default view.
+     *
+     * @param string $name
+     *
+     * @return static
+     */
+    public function setDefault(string $name): ViewManagerInterface;
 }

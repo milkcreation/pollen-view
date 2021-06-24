@@ -15,18 +15,9 @@ class PlatesViewEngine extends AbstractViewEngine
 {
     use ContainerProxy;
 
-    /**
-     * @var PlatesEngine
-     */
-    private PlatesEngine $platesEngine;
+    protected string $extension = 'plates.php';
 
-    /**
-     * @param string $fileExtension
-     */
-    public function __construct(string $fileExtension = 'plates.php')
-    {
-        $this->platesEngine = new PlatesEngine(null, $fileExtension);
-    }
+    private ?PlatesEngine $platesEngine = null;
 
     /**
      * @param string $method
@@ -36,7 +27,7 @@ class PlatesViewEngine extends AbstractViewEngine
      */
     public function __call(string $method, array $parameters)
     {
-        return $this->platesEngine->$method(...$parameters);
+        return $this->platesEngine()->$method(...$parameters);
     }
 
     /**
@@ -44,7 +35,7 @@ class PlatesViewEngine extends AbstractViewEngine
      */
     public function addFunction(string $name, callable $function): ViewEngineInterface
     {
-        $this->platesEngine->registerFunction($name, $function);
+        $this->platesEngine()->registerFunction($name, $function);
 
         return $this;
     }
@@ -54,7 +45,7 @@ class PlatesViewEngine extends AbstractViewEngine
      */
     public function exists(string $name): bool
     {
-        return $this->platesEngine->exists($name);
+        return $this->platesEngine()->exists($name);
     }
 
     /**
@@ -62,13 +53,13 @@ class PlatesViewEngine extends AbstractViewEngine
      */
     public function render(string $name, array $datas = []): string
     {
-        return $this->platesEngine->render($name, $datas);
+        return $this->platesEngine()->render($name, $datas);
     }
 
     /**
      * @inheritDoc
      */
-    public function setCacheDir(string $cacheDir): ViewEngineInterface
+    public function setCacheDir(?string $cacheDir = null): ViewEngineInterface
     {
         return $this;
     }
@@ -78,7 +69,7 @@ class PlatesViewEngine extends AbstractViewEngine
      */
     public function setDirectory(string $directory): ViewEngineInterface
     {
-        $this->platesEngine->setDirectory($directory);
+        $this->platesEngine()->setDirectory($directory);
 
         return $this;
     }
@@ -88,7 +79,7 @@ class PlatesViewEngine extends AbstractViewEngine
      */
     public function setOverrideDir(string $overrideDir): ViewEngineInterface
     {
-        $this->platesEngine->addFolder('_override_dir', $overrideDir, true);
+        $this->platesEngine()->addFolder('_override_dir', $overrideDir, true);
 
         return $this;
     }
@@ -96,10 +87,26 @@ class PlatesViewEngine extends AbstractViewEngine
     /**
      * @inheritDoc
      */
-    public function share(string $key, $value = null): ViewEngineInterface
+    public function share($key, $value = null): ViewEngineInterface
     {
-        $this->platesEngine->addData([$key => $value]);
+        $keys = is_array($key) ? $key : [$key => $value];
+
+        $this->platesEngine()->addData($keys);
 
         return $this;
+    }
+
+    /**
+     * Get|Instantiate Plates Engine.
+     *
+     * @return PlatesEngine
+     */
+    protected function platesEngine(): PlatesEngine
+    {
+        if ($this->platesEngine === null) {
+            $this->platesEngine = new PlatesEngine(null, $this->options['extension'] ?? $this->extension);
+        }
+
+        return $this->platesEngine;
     }
 }
