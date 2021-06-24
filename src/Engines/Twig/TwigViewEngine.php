@@ -93,6 +93,16 @@ class TwigViewEngine extends AbstractViewEngine
     /**
      * @inheritDoc
      */
+    public function setCacheDir(string $cacheDir): ViewEngineInterface
+    {
+        $this->twigEnvironment->setCache($cacheDir);
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function setDirectory(string $directory): ViewEngineInterface
     {
         $this->directoryLoader = new FilesystemLoader($directory);
