@@ -19,9 +19,9 @@ class View implements ViewInterface
     /**
      * @inheritDoc
      */
-    public function addFunction(string $name, callable $function): ViewInterface
+    public function addExtension(string $name, $extension = null): ViewInterface
     {
-        $this->getEngine()->addFunction($name, $function);
+        $this->getEngine()->addExtension($name, $extension);
 
         return $this;
     }
@@ -58,6 +58,16 @@ class View implements ViewInterface
     public function setDirectory(string $directory): ViewInterface
     {
         $this->getEngine()->setDirectory($directory);
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setFileExtension(string $fileExtension): ViewInterface
+    {
+        $this->getEngine()->setFileExtension($fileExtension);
 
         return $this;
     }

@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace Pollen\View;
 
 use Pollen\Support\Proxy\ContainerProxyInterface;
+use Pollen\Support\Proxy\ViewProxyInterface;
 
-interface ViewEngineInterface extends ContainerProxyInterface
+interface ViewEngineInterface extends ContainerProxyInterface, ViewProxyInterface
 {
     /**
-     * Add a template function.
+     * Add a template extension.
      *
      * @param string $name
-     * @param callable $function
+     * @param ViewExtensionInterface|callable|string|null $extension
      *
      * @return static
      */
-    public function addFunction(string $name, callable $function): ViewEngineInterface;
+    public function addExtension(string $name, $extension): ViewEngineInterface;
 
     /**
      * @param string $name
@@ -52,6 +53,24 @@ interface ViewEngineInterface extends ContainerProxyInterface
      * @return static
      */
     public function setDirectory(string $directory): ViewEngineInterface;
+
+    /**
+     * Set resolved file extension.
+     *
+     * @param string $fileExtension
+     *
+     * @return static
+     */
+    public function setFileExtension(string $fileExtension): ViewEngineInterface;
+
+    /**
+     * Set view engine options.
+     *
+     * @param array $options
+     *
+     * @return static
+     */
+    public function setOptions(array $options = []): ViewEngineInterface;
 
     /**
      * Set template override directory.

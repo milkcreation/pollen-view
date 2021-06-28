@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Pollen\View;
 
 use Pollen\Container\BootableServiceProvider;
+use Pollen\View\Engines\Plates\PlatesViewEngine;
+use Pollen\View\Engines\Twig\TwigViewEngine;
 
 class ViewServiceProvider extends BootableServiceProvider
 {
@@ -30,6 +32,14 @@ class ViewServiceProvider extends BootableServiceProvider
             $viewManager = $this->getContainer()->get(ViewManagerInterface::class);
 
             return $viewManager->getDefaultView();
+        });
+
+        $this->getContainer()->share(PlatesViewEngine::class, function () {
+            return new PlatesViewEngine();
+        });
+
+        $this->getContainer()->share(TwigViewEngine::class, function () {
+            return new TwigViewEngine();
         });
     }
 }
