@@ -7,14 +7,14 @@ namespace Pollen\View;
 interface ViewInterface
 {
     /**
-     * Add a template function.
+     * Add a template extension.
      *
      * @param string $name
-     * @param callable $function
+     * @param ViewExtensionInterface|callable|string|null $extension
      *
-     * @return ViewInterface
+     * @return static
      */
-    public function addFunction(string $name, callable $function): ViewInterface;
+    public function addExtension(string $name, $extension = null): ViewInterface;
 
     /**
      * Get instance of view engine.
@@ -47,16 +47,25 @@ interface ViewInterface
      *
      * @param string $directory Absolute path of templates directory.
      *
-     * @return ViewInterface
+     * @return static
      */
     public function setDirectory(string $directory): ViewInterface;
+
+    /**
+     * Set resolved file extension.
+     *
+     * @param string $fileExtension
+     *
+     * @return static
+     */
+    public function setFileExtension(string $fileExtension): ViewInterface;
 
     /**
      * Set template override directory.
      *
      * @param string $overrideDir Absolute path of override templates directory.
      *
-     * @return ViewInterface
+     * @return static
      */
     public function setOverrideDir(string $overrideDir): ViewInterface;
 

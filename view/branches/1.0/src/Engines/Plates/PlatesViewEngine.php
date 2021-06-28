@@ -7,6 +7,7 @@ namespace Pollen\View\Engines\Plates;
 use Pollen\Support\Proxy\ContainerProxy;
 use Pollen\View\AbstractViewEngine;
 use Pollen\View\ViewEngineInterface;
+use Pollen\View\ViewExtensionInterface;
 
 /**
  * @mixin PlatesEngine
@@ -20,6 +21,8 @@ class PlatesViewEngine extends AbstractViewEngine
     private ?PlatesEngine $platesEngine = null;
 
     /**
+     * Call Plates Engine delegate method.
+     *
      * @param string $method
      * @param array $parameters
      *
@@ -33,9 +36,13 @@ class PlatesViewEngine extends AbstractViewEngine
     /**
      * @inheritDoc
      */
-    public function addFunction(string $name, callable $function): ViewEngineInterface
+    public function addExtension(string $name, $extension): ViewEngineInterface
     {
-        $this->platesEngine()->registerFunction($name, $function);
+        if ($extension instanceof ViewExtensionInterface) {
+            $extension->register($this);
+        } elseif (is_callable($extension)) {
+            $this->platesEngine()->registerFunction($name, $extension);
+        }
 
         return $this;
     }
@@ -77,6 +84,16 @@ class PlatesViewEngine extends AbstractViewEngine
     /**
      * @inheritDoc
      */
+    public function setFileExtension(string $fileExtension): ViewEngineInterface
+    {
+        $this->platesEngine()->setFileExtension($fileExtension);
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function setOverrideDir(string $overrideDir): ViewEngineInterface
     {
         $this->platesEngine()->addFolder('_override_dir', $overrideDir, true);
@@ -101,7 +118,7 @@ class PlatesViewEngine extends AbstractViewEngine
      *
      * @return PlatesEngine
      */
-    protected function platesEngine(): PlatesEngine
+    public function platesEngine(): PlatesEngine
     {
         if ($this->platesEngine === null) {
             $this->platesEngine = new PlatesEngine(null, $this->options['extension'] ?? $this->extension);

@@ -5,18 +5,22 @@ declare(strict_types=1);
 namespace Pollen\View;
 
 use Pollen\Support\Proxy\ContainerProxy;
+use Pollen\Support\Proxy\ViewProxy;
 
 abstract class AbstractViewEngine implements ViewEngineInterface
 {
     use ContainerProxy;
+    use ViewProxy;
 
     protected array $options = [];
 
     /**
-     * @param array $options
+     * @inheritDoc
      */
-    public function __construct(array $options = [])
+    public function setOptions(array $options = []): ViewEngineInterface
     {
         $this->options = $options;
+
+        return $this;
     }
 }

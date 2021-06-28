@@ -14,6 +14,7 @@ use Pollen\View\Engines\Twig\TwigViewEngine;
 use Pollen\View\Exception\UnableCreateEngineException;
 use Pollen\View\Exception\UnableCreateViewException;
 use Psr\Container\ContainerInterface as Container;
+use RuntimeException;
 use Throwable;
 
 class ViewManager implements ViewManagerInterface
@@ -26,20 +27,39 @@ class ViewManager implements ViewManagerInterface
 
     protected ?ViewInterface $defaultView = null;
 
-    protected string $defaultViewEngineName = 'plates';
+    protected string $defaultEngine = 'plates';
+
+    protected array $defaultExtensions = [];
+
+    protected ?string $defaultCacheDir = null;
+
+    protected ?string $defaultDirectory = null;
+
+    protected ?string $defaultFileExtension = null;
+
+    protected ?string $defaultOverrideDir = null;
+
+    protected array $defaultShared = [];
 
     /**
-     * @var array|string[]
+     * @var array<string, ViewEngineInterface|string>
      */
-    protected array $viewEngines = [
-        'plates' => PlatesViewEngine::class,
-        'twig'   => TwigViewEngine::class,
-    ];
+    protected array $engines = [];
 
     /**
-     * @var array<string, callable>
+     * @var array<string, ViewExtensionInterface|callable|string>
      */
-    protected array $sharedFunctions = [];
+    protected array $extensions = [];
+
+    /**
+     * @var string[]
+     */
+    protected array $sharedExtensions = [];
+
+    /**
+     * @var array<string, ViewExtensionInterface>
+     */
+    private array $resolvedExtensions = [];
 
     /**
      * @param array $config
@@ -79,26 +99,21 @@ class ViewManager implements ViewManagerInterface
     public function boot(): void
     {
         if (!$this->isBooted()) {
+            $this->registerEngine('plates', PlatesViewEngine::class);
+            $this->registerEngine('twig', TwigViewEngine::class);
+
             $this->setBooted();
         }
     }
 
     /**
-     * Create a new view instance.
-     *
-     * @param string|ViewEngineInterface|null $viewEngineDef
-     * @param array $args
-     * @param Closure|null $engineCallback
-     *
-     * @return ViewInterface
+     * @inheritDoc
      */
-    public function createView($viewEngineDef = null, array $args = [], ?Closure $engineCallback = null): ViewInterface
+    public function createView($viewEngineDef = null, ?Closure $engineCallback = null): ViewInterface
     {
-        $args = array_values($args);
-
         if ($viewEngineDef === null) {
             try {
-                $viewEngine = $this->resolveViewEngine(null, ...$args);
+                $viewEngine = $this->resolveEngine();
             } catch (Throwable $e) {
                 throw new UnableCreateEngineException('', 0, $e);
             }
@@ -107,7 +122,7 @@ class ViewManager implements ViewManagerInterface
             $viewEngine = $viewEngineDef;
         } elseif (is_string($viewEngineDef)) {
             try {
-                $viewEngine = $this->resolveViewEngine($viewEngineDef, ...$args);
+                $viewEngine = $this->resolveEngine($viewEngineDef);
             }  catch (Throwable $e) {
                 throw new UnableCreateEngineException('', 0, $e);
             }
@@ -125,9 +140,9 @@ class ViewManager implements ViewManagerInterface
             throw new UnableCreateViewException();
         }
 
-        if ($functions = $this->sharedFunctions) {
-            foreach ($functions as $name => $callable) {
-                $view->addFunction($name, $callable);
+        if ($extensions = $this->sharedExtensions) {
+            foreach ($extensions as $name) {
+                $view->addExtension($name, $this->resolveExtension($name));
             }
         }
 
@@ -142,27 +157,69 @@ class ViewManager implements ViewManagerInterface
         if ($this->defaultView === null) {
             $this->defaultView = $this->createView();
 
-            $this->defaultView->setDirectory(getcwd());
+            $this->defaultView->setDirectory($this->defaultDirectory ?? getcwd());
+
+            if ($this->defaultFileExtension) {
+                $this->defaultView->setFileExtension($this->defaultFileExtension);
+            }
+
+            if ($this->defaultOverrideDir) {
+                $this->defaultView->setOverrideDir($this->defaultOverrideDir);
+            }
+
+            if ($this->defaultCacheDir) {
+                $this->defaultView->setCacheDir($this->defaultCacheDir);
+            }
+
+            if ($this->defaultShared) {
+                $this->defaultView->share($this->defaultShared);
+            }
+
+            if ($this->defaultExtensions) {
+                foreach ($this->defaultExtensions as $name => $extension) {
+                    $this->defaultView->addExtension($name, $extension);
+                }
+            }
         }
 
         return $this->defaultView;
     }
 
     /**
-     * Registrer a view engine.
-     *
-     * @param string $name
-     * @param string $classname
-     * @param bool $asDefault
-     *
-     * @return static
+     * @inheritDoc
      */
-    public function registerViewEngine(string $name, string $classname, bool $asDefault = false): ViewManagerInterface
+    public function getExtension(string $name): ?ViewExtensionInterface
     {
-        $this->viewEngines[$name] = $classname;
+        try {
+           return $this->resolveExtension($name);
+        } catch (Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function registerEngine(string $name,  $engineDef, bool $asDefault = false): ViewManagerInterface
+    {
+        $this->engines[$name] = $engineDef;
 
         if ($asDefault) {
-            $this->defaultViewEngineName = $name;
+            $this->defaultEngine = $name;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function registerExtension(string $name, $extensionDef, bool $shared = false): ViewManagerInterface
+    {
+        $this->extensions[$name] = $extensionDef;
+
+        if ($shared && !in_array($name, $this->sharedExtensions, true)) {
+            $this->sharedExtensions[] = $name;
         }
 
         return $this;
@@ -172,24 +229,31 @@ class ViewManager implements ViewManagerInterface
      * Resolve view engine.
      *
      * @param string|null $name
-     * @param ...$args
      *
      * @return ViewEngineInterface
      */
-    protected function resolveViewEngine(?string $name = null, ...$args): ViewEngineInterface
+    protected function resolveEngine(?string $name = null): ViewEngineInterface
     {
         if ($name === null) {
-            $viewEngineClass = $this->viewEngines[$this->defaultViewEngineName] ?? null;
+            $engineDef = $this->engines[$this->defaultEngine] ?? null;
         } else {
-            $viewEngineClass = $this->viewEngines[$name] ?? null;
+            $engineDef = $this->engines[$name] ?? null;
         }
 
-        if (!is_a($viewEngineClass, ViewEngineInterface::class, true)) {
+        if (is_string($engineDef) && $this->containerHas($engineDef)) {
+            $engineDef = $this->ContainerGet($engineDef);
+        }
+
+        if (!is_a($engineDef, ViewEngineInterface::class, true)) {
             throw new UnableCreateEngineException();
         }
 
-        /** @var ViewEngineInterface $viewEngine */
-        $viewEngine = new $viewEngineClass(...$args);
+        if (!is_object($engineDef)) {
+            /** @var ViewEngineInterface $viewEngine */
+            $viewEngine = new $engineDef();
+        } else {
+            $viewEngine = $engineDef;
+        }
 
         if ($container = $this->getContainer()) {
             $viewEngine->setContainer($container);
@@ -199,21 +263,56 @@ class ViewManager implements ViewManagerInterface
     }
 
     /**
-     * @inheritDoc
+     * Resolve view extension.
+     *
+     * @param string $name
+     *
+     * @return ViewExtensionInterface|callable
      */
-    public function setDefault(string $name): ViewManagerInterface
+    protected function resolveExtension(string $name)
     {
-        $this->defaultViewEngineName = $name;
+        if (!$extensionDef = $this->extensions[$name] ?? null) {
+            throw new RuntimeException(sprintf('The view extension [%s] is not registered.', $name));
+        }
 
-        return $this;
+        if (isset($this->resolvedExtensions[$name])) {
+            return $this->resolvedExtensions;
+        }
+
+        if (is_string($extensionDef) && $this->containerHas($extensionDef)) {
+            $extensionDef = $this->ContainerGet($extensionDef);
+        }
+
+        if (is_a($extensionDef, ViewExtensionInterface::class, true)) {
+            if (!is_object($extensionDef)) {
+                $extension = new $extensionDef();
+            } else {
+                $extension = $extensionDef;
+            }
+
+            $extension->setName($name);
+
+            if ($container = $this->getContainer()) {
+                $extension->setContainer($container);
+            }
+
+            return $extension;
+        }
+
+        if (is_callable($extensionDef)) {
+            return $extensionDef;
+        }
+
+        throw new RuntimeException(sprintf('The view extension [%s] definition is invalid.', $name));
     }
 
     /**
      * @inheritDoc
      */
-    public function setSharedFunction(string $name, callable $function): ViewManagerInterface
+    public function setDefault(string $name): ViewManagerInterface
     {
-        $this->sharedFunctions[$name] = $function;
+        $this->defaultEngine = $name;
+        $this->defaultView = null;
 
         return $this;
     }
@@ -224,11 +323,13 @@ class ViewManager implements ViewManagerInterface
     /**
      * @inheritDoc
      */
-    public function addFunction(string $name, callable $function): ViewInterface
+    public function addExtension(string $name, $extension = null): ViewInterface
     {
-        $this->getDefaultView()->addFunction($name, $function);
+        $this->defaultExtensions[$name] = $extension;
 
-        return $this->getDefaultView();
+        $this->getDefaultView()->addExtension($name, $extension);
+
+        return $this;
     }
 
     /**
@@ -252,6 +353,8 @@ class ViewManager implements ViewManagerInterface
      */
     public function setCacheDir(?string $cacheDir = null): ViewInterface
     {
+        $this->defaultCacheDir = $cacheDir;
+
         $this->getDefaultView()->setCacheDir($cacheDir);
 
         return $this;
@@ -262,7 +365,23 @@ class ViewManager implements ViewManagerInterface
      */
     public function setDirectory(string $directory): ViewInterface
     {
-        return $this->getDefaultView()->setDirectory($directory);
+        $this->defaultDirectory = $directory;
+
+        $this->getDefaultView()->setDirectory($directory);
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setFileExtension(string $fileExtension): ViewInterface
+    {
+        $this->defaultFileExtension = $fileExtension;
+
+        $this->getDefaultView()->setFileExtension($fileExtension);
+
+        return $this;
     }
 
     /**
@@ -270,7 +389,11 @@ class ViewManager implements ViewManagerInterface
      */
     public function setOverrideDir(string $overrideDir): ViewInterface
     {
-        return $this->getDefaultView()->setOverrideDir($overrideDir);
+        $this->defaultOverrideDir = $overrideDir;
+
+        $this->getDefaultView()->setOverrideDir($overrideDir);
+
+        return $this;
     }
 
     /**
@@ -278,6 +401,14 @@ class ViewManager implements ViewManagerInterface
      */
     public function share($key, $value = null): ViewInterface
     {
-        return $this->getDefaultView()->share($key, $value);
+        $keys = is_array($key) ? $key : [$key => $value];
+
+        foreach($keys as $k => $v) {
+            $this->defaultShared[$k] =  $v;
+        }
+
+        $this->getDefaultView()->share($key, $value);
+
+        return $this;
     }
 }

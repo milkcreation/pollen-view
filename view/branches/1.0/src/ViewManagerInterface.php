@@ -26,12 +26,11 @@ interface ViewManagerInterface extends
      * Create a new view.
      *
      * @param string|ViewEngineInterface|null $viewEngineDef
-     * @param array $args
      * @param Closure|null $engineCallback
      *
      * @return ViewInterface
      */
-    public function createView($viewEngineDef = null, array $args = [], ?Closure $engineCallback = null): ViewInterface;
+    public function createView($viewEngineDef = null, ?Closure $engineCallback = null): ViewInterface;
 
     /**
      * Get default view.
@@ -41,15 +40,34 @@ interface ViewManagerInterface extends
     public function getDefaultView(): ViewInterface;
 
     /**
-     * View Engine registration.
+     * Get view extension instance.
      *
      * @param string $name
-     * @param string $classname
+     *
+     * @return ViewExtensionInterface|null
+     */
+    public function getExtension(string $name): ?ViewExtensionInterface;
+
+    /**
+     * View engine registration.
+     *
+     * @param string $name
+     * @param ViewEngineInterface|string $engineDef
      * @param bool $asDefault
      *
      * @return static
      */
-    public function registerViewEngine(string $name, string $classname, bool $asDefault = false): ViewManagerInterface;
+    public function registerEngine(string $name, $engineDef, bool $asDefault = false): ViewManagerInterface;
+
+    /**
+     * View Extension registration.
+     *
+     * @param string $name
+     * @param ViewExtensionInterface|string|callable $extensionDef
+     * @param bool $shared
+     *
+     */
+    public function registerExtension(string $name, $extensionDef, bool $shared = false): ViewManagerInterface;
 
     /**
      * Set default view.

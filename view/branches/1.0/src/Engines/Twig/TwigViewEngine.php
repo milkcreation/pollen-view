@@ -6,6 +6,7 @@ namespace Pollen\View\Engines\Twig;
 
 use Pollen\View\AbstractViewEngine;
 use Pollen\View\Exception\MustHaveTemplateDirException;
+use Pollen\View\ViewExtensionInterface;
 use Twig\Environment as TwigEnvironment;
 use Pollen\Support\Proxy\ContainerProxy;
 use Pollen\View\ViewEngineInterface;
@@ -20,7 +21,7 @@ class TwigViewEngine extends AbstractViewEngine
 {
     use ContainerProxy;
 
-    protected string $extension = "html.twig";
+    protected string $fileExtension = "html.twig";
 
     protected bool $pathsChanged = true;
 
@@ -46,11 +47,15 @@ class TwigViewEngine extends AbstractViewEngine
     /**
      * @inheritDoc
      */
-    public function addFunction(string $name, callable $function): ViewEngineInterface
+    public function addExtension(string $name, $extension): ViewEngineInterface
     {
-        $this->twigEnvironment()->addFunction(
-            !$function instanceof TwigFunction ? new TwigFunction($name, $function) : $function
-        );
+        if ($extension instanceof ViewExtensionInterface) {
+            $extension->register($this);
+        } elseif ($extension instanceof TwigFunction) {
+            $this->twigEnvironment()->addFunction($extension);
+        } elseif(is_callable($extension)) {
+            $this->twigEnvironment()->addFunction(new TwigFunction($name, $extension));
+        }
 
         return $this;
     }
@@ -72,7 +77,7 @@ class TwigViewEngine extends AbstractViewEngine
     {
         $this->twigPathsLoad();
 
-        $name = "$name.$this->extension";
+        $name = "$name.$this->fileExtension";
 
         try {
             return $this->twigEnvironment()->render($name, $datas);
@@ -109,6 +114,16 @@ class TwigViewEngine extends AbstractViewEngine
     /**
      * @inheritDoc
      */
+    public function setFileExtension(string $fileExtension): ViewEngineInterface
+    {
+        $this->fileExtension = $fileExtension;
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function setOverrideDir(string $overrideDir): ViewEngineInterface
     {
         $this->overrideDir = $overrideDir;
@@ -136,7 +151,7 @@ class TwigViewEngine extends AbstractViewEngine
      *
      * @return TwigEnvironment
      */
-    protected function twigEnvironment(): TwigEnvironment
+    public function twigEnvironment(): TwigEnvironment
     {
         if ($this->twigEnvironment === null) {
             $this->twigEnvironment = new TwigEnvironment(new ChainLoader(), $this->options);
