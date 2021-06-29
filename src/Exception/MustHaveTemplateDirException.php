@@ -9,7 +9,7 @@ use Throwable;
 
 class MustHaveTemplateDirException extends RuntimeException
 {
-    public function __construct(?string $engine = '', string $message = "", int $code = 0, Throwable $previous = null)
+    public function __construct(?string $engine = '', string $message = '', int $code = 0, Throwable $previous = null)
     {
         if (empty($message)) {
             $message = !empty($engine)

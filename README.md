@@ -62,11 +62,12 @@ More informations :
 
 ## Fundamentals
 
-### An unified interface
+### An unified API interface
 
-To respond to the particularity of each of the template display engines, Pollen View benefits from a unified interface.
+To respond to the particularity of each of the model display engines, Pollen View benefits from a unified interface
+this makes it possible to work with different engines via the same API.
 
-### Directory and override Directory
+### Directory and override
 
 Pollen **View** purposes a different logic from the libraries it inherits.
 
@@ -87,54 +88,202 @@ It is strongly recommended that you enable the cache when deploying to productio
 
 ## Using global View
 
+#### Template file
+
 ```php
-use Pollen\View\ViewManager;
-
-$viewManager = new ViewManager();
-
-#
-
-## Set view directory
-$directory = "/var/www/html/views";
-
+# /var/www/html/views/hello-world.plates.php
+echo 'Hello World !';
 ```
 
-## Creating a new View
-
-### Standard Method
+#### View call
 
 ```php
 use Pollen\View\ViewManager;
 
 $viewManager = new ViewManager();
 
-## For Plates
-$view = $viewManager->createView('plates');
+$viewManager->setDirectory('/var/www/html/views');
 
-## For Twig
-$view = $viewManager->createView('twig');
-
+echo $view->render('hello-world');
+exit;
 ```
 
-### Callback Engine Configuration Method
+## Creating a new view instance
+
+### Simple usage
+
+#### Template file
+
+```php
+# /var/www/html/views/hello-world.plates.php
+echo 'Hello World' . $this->get('name') . '!';
+```
+
+#### View call 
+
+```php
+use Pollen\View\ViewManager;
+
+$viewManager = new ViewManager();
+
+## Creating a Plates View
+$view = $viewManager->createView('plates')->setDirectory('/var/www/html/views');
+
+echo $view->render('hello-world', ['name' => 'John Doe']);
+exit;
+```
+
+### Advanced usage 
+
+In this example we use a customized template class and the view is configured through the view engine callback. 
+
+#### Customized template class
+
+```php
+namespace Acme\View;
+
+use Pollen\View\Engines\Plates\PlatesTemplate as BasePlatesTemplate;
+
+class PlatesTemplate extends BasePlatesTemplate
+{
+    public function helloWorldName(string $name): string
+    {
+        return 'Hello World '. $name . '!';
+    }
+}
+```
+
+#### Template file
+
+```php
+# /var/www/html/views/hello-world.plates.php
+/**
+ * @var Acme\View\PlatesTemplate $this
+ */
+echo $this->helloWorldName($this->get('name'));
+```
+
+#### View call
 
 ```php
 use Pollen\View\ViewManager;
 use Pollen\View\Engines\Plates\PlatesViewEngine;
+use Acme\View\PlatesTemplate;
 
 $viewManager = new ViewManager();
 
-$directory = "/var/www/html/views";
-$overrideDir = "/var/www/html/public/";
+$directory = '/var/www/html/views';
 
 $view = $viewManager->createView(
-    'plates',
-    function (PlatesViewEngine $platesViewEngine) use ($directory, $overrideDir) {
-        $platesViewEngine
-            ->setDirectory($directory)
-            ->setOverrideDir($overrideDir);
+    (new PlatesViewEngine()),
+    function (PlatesViewEngine $platesViewEngine) use ($directory) {
+        $platesViewEngine->platesEngine()
+            ->setDirectory($directory);
+
+        $platesViewEngine->platesEngine()->setTemplateClass(PlatesTemplate::class);
 
         return $platesViewEngine;
     }
 );
+
+echo $view->render('hello-world', ['name' => 'John Doe']);
+exit;
+```
+
+## Extending a View
+
+### Simple method (with a callback)
+
+#### Template file
+
+```php
+# /var/www/html/views/hello-world.plates.php
+echo $this->helloWorldName($this->get('name'));
+```
+
+#### View call
+
+```php
+use Pollen\View\ViewManager;
+
+$viewManager = new ViewManager();
+
+$view = $viewManager->createView('plates')
+    ->setDirectory('/var/www/html/views')
+    ->addExtension('helloWorldName', function (string $name): string {
+        return sprinf('Hello World %s !', $name);
+    });
+
+echo $view->render('hello-world', ['name' => 'John Doe']);
+exit;
+```
+
+### Advanced method with View Extension class
+
+#### View Extension class
+
+```php
+use Acme\View;
+
+use Pollen\View\ViewExtension;
+use Pollen\View\ViewEngineInterface;
+use Pollen\View\Engines\Plates\PlatesViewEngine;
+use Pollen\View\Engines\Twig\TwigViewEngine;
+use Twig\TwigFunction;
+
+class HelloWorldNameViewExtension extends ViewExtension
+{
+    public function register(ViewEngineInterface $viewEngine)
+    {
+        if (is_a($viewEngine, PlatesViewEngine::class)) {
+            $viewEngine->platesEngine()->registerFunction(
+                    $this->getName(),
+                    function (string $name): string {
+                        return sprinf('Hello World %s !', $name);
+                    }
+                );
+        }
+        
+        /**
+         * Extending Twig
+         * @see https://twig.symfony.com/doc/3.x/advanced.html 
+         */
+        if (is_a($viewEngine, TwigViewEngine::class)) {
+            $viewEngine->twigEnvironment()->addFunction(
+                new TwigFunction(
+                    $this->getName(),
+                    function (string $name): string {
+                        return sprinf('Hello World %s !', $name);
+                    }
+                )
+            );
+        }
+           
+        return null;
+    }
+}
+
+```
+
+#### Template file
+
+```php
+# /var/www/html/views/hello-world.plates.php
+echo $this->helloWorldName($this->get('name'));
+```
+
+#### View call
+
+```php
+use Pollen\View\ViewManager;
+use Acme\View\HelloWorldNameViewExtension;
+
+$viewManager = new ViewManager();
+
+$view = $viewManager->createView('plates')
+    ->setDirectory('/var/www/html/views')
+    ->addExtension('helloWorldName', new HelloWorldNameViewExtension());
+
+echo $view->render('hello-world', ['name' => 'John Doe']);
+exit;
 ```

@@ -7,7 +7,7 @@ namespace Pollen\View;
 use Pollen\Support\Proxy\ContainerProxy;
 use Pollen\Support\Proxy\ViewProxy;
 
-abstract class AbstractViewEngine implements ViewEngineInterface
+abstract class ViewEngine implements ViewEngineInterface
 {
     use ContainerProxy;
     use ViewProxy;

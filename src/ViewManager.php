@@ -109,7 +109,7 @@ class ViewManager implements ViewManagerInterface
     /**
      * @inheritDoc
      */
-    public function createView($viewEngineDef = null, ?Closure $engineCallback = null): ViewInterface
+    public function createView($viewEngineDef = null, ?Closure $engineCallback = null, bool $withShareExtensions = true): ViewInterface
     {
         if ($viewEngineDef === null) {
             try {
@@ -140,7 +140,7 @@ class ViewManager implements ViewManagerInterface
             throw new UnableCreateViewException();
         }
 
-        if ($extensions = $this->sharedExtensions) {
+        if ($withShareExtensions && ($extensions = $this->sharedExtensions)) {
             foreach ($extensions as $name) {
                 $view->addExtension($name, $this->resolveExtension($name));
             }
@@ -188,7 +188,7 @@ class ViewManager implements ViewManagerInterface
     /**
      * @inheritDoc
      */
-    public function getExtension(string $name): ?ViewExtensionInterface
+    public function getExtension(string $name)
     {
         try {
            return $this->resolveExtension($name);
@@ -252,7 +252,7 @@ class ViewManager implements ViewManagerInterface
             /** @var ViewEngineInterface $viewEngine */
             $viewEngine = new $engineDef();
         } else {
-            $viewEngine = $engineDef;
+            $viewEngine = clone $engineDef;
         }
 
         if ($container = $this->getContainer()) {
