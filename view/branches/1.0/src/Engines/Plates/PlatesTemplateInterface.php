@@ -10,27 +10,27 @@ namespace Pollen\View\Engines\Plates;
 interface PlatesTemplateInterface
 {
     /**
-     * Récupération de la liste des paramètres.
+     * Get all parameters.
      *
      * @return array
      */
     public function all(): array;
 
     /**
-     * Récupération de paramètres.
+     * Get parameter for a given key.
      *
-     * @param string $key Clé d'indexe de l'attribut. Syntaxe à point permise.
-     * @param mixed|null $default Valeur de retour par défaut.
+     * @param string $key
+     * @param mixed|null $default
      *
      * @return mixed
      */
     public function get(string $key, $default = null);
 
     /**
-     * Récupération|Linéarisation d'attributs HTML.
+     * Get list|Linearized HTML attributes.
      *
-     * @param array|null $attrs Liste des attributs HTML.
-     * @param bool $linearized Activation de la linéarisation.
+     * @param array|null $attrs
+     * @param bool $linearized
      *
      * @return string|array
      */

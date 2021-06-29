@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Pollen\View\Engines\Twig;
 
-use Pollen\View\AbstractViewEngine;
+use Pollen\View\ViewEngine;
 use Pollen\View\Exception\MustHaveTemplateDirException;
 use Pollen\View\ViewExtensionInterface;
 use Twig\Environment as TwigEnvironment;
@@ -17,7 +17,7 @@ use Twig\Loader\ChainLoader;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFunction;
 
-class TwigViewEngine extends AbstractViewEngine
+class TwigViewEngine extends ViewEngine
 {
     use ContainerProxy;
 
@@ -49,6 +49,10 @@ class TwigViewEngine extends AbstractViewEngine
      */
     public function addExtension(string $name, $extension): ViewEngineInterface
     {
+        if ($extension === null) {
+            $extension = $this->viewManager()->getExtension($name);
+        }
+
         if ($extension instanceof ViewExtensionInterface) {
             $extension->register($this);
         } elseif ($extension instanceof TwigFunction) {
@@ -147,7 +151,7 @@ class TwigViewEngine extends AbstractViewEngine
     }
 
     /**
-     * Get|Instantiate Twig Environment.
+     * Get|Create Twig Environment instance.
      *
      * @return TwigEnvironment
      */

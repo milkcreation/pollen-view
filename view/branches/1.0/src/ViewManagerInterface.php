@@ -27,10 +27,11 @@ interface ViewManagerInterface extends
      *
      * @param string|ViewEngineInterface|null $viewEngineDef
      * @param Closure|null $engineCallback
+     * @param bool $withShareExtensions
      *
      * @return ViewInterface
      */
-    public function createView($viewEngineDef = null, ?Closure $engineCallback = null): ViewInterface;
+    public function createView($viewEngineDef = null, ?Closure $engineCallback = null, bool $withShareExtensions = true): ViewInterface;
 
     /**
      * Get default view.
@@ -44,9 +45,9 @@ interface ViewManagerInterface extends
      *
      * @param string $name
      *
-     * @return ViewExtensionInterface|null
+     * @return ViewExtensionInterface|callable|null
      */
-    public function getExtension(string $name): ?ViewExtensionInterface;
+    public function getExtension(string $name);
 
     /**
      * View engine registration.
@@ -66,6 +67,7 @@ interface ViewManagerInterface extends
      * @param ViewExtensionInterface|string|callable $extensionDef
      * @param bool $shared
      *
+     * @return static
      */
     public function registerExtension(string $name, $extensionDef, bool $shared = false): ViewManagerInterface;
 

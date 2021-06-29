@@ -5,18 +5,16 @@ declare(strict_types=1);
 namespace Pollen\View\Engines\Plates;
 
 use Pollen\Support\Proxy\ContainerProxy;
-use Pollen\View\AbstractViewEngine;
+use Pollen\View\ViewEngine;
 use Pollen\View\ViewEngineInterface;
 use Pollen\View\ViewExtensionInterface;
 
 /**
  * @mixin PlatesEngine
  */
-class PlatesViewEngine extends AbstractViewEngine
+class PlatesViewEngine extends ViewEngine
 {
     use ContainerProxy;
-
-    protected string $extension = 'plates.php';
 
     private ?PlatesEngine $platesEngine = null;
 
@@ -38,6 +36,10 @@ class PlatesViewEngine extends AbstractViewEngine
      */
     public function addExtension(string $name, $extension): ViewEngineInterface
     {
+        if ($extension === null) {
+            $extension = $this->viewManager()->getExtension($name);
+        }
+
         if ($extension instanceof ViewExtensionInterface) {
             $extension->register($this);
         } elseif (is_callable($extension)) {
@@ -114,14 +116,14 @@ class PlatesViewEngine extends AbstractViewEngine
     }
 
     /**
-     * Get|Instantiate Plates Engine.
+     * Get|Create Plates Engine instance.
      *
      * @return PlatesEngine
      */
     public function platesEngine(): PlatesEngine
     {
         if ($this->platesEngine === null) {
-            $this->platesEngine = new PlatesEngine(null, $this->options['extension'] ?? $this->extension);
+            $this->platesEngine = new PlatesEngine(null, $this->options['extension'] ?? 'plates.php');
         }
 
         return $this->platesEngine;
