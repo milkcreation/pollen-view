@@ -13,6 +13,7 @@ use Pollen\View\Engines\Plates\PlatesViewEngine;
 use Pollen\View\Engines\Twig\TwigViewEngine;
 use Pollen\View\Exception\UnableCreateEngineException;
 use Pollen\View\Exception\UnableCreateViewException;
+use Pollen\View\Extensions\FakerViewExtension;
 use Psr\Container\ContainerInterface as Container;
 use RuntimeException;
 use Throwable;
@@ -101,6 +102,8 @@ class ViewManager implements ViewManagerInterface
         if (!$this->isBooted()) {
             $this->registerEngine('plates', PlatesViewEngine::class);
             $this->registerEngine('twig', TwigViewEngine::class);
+
+            $this->registerExtension('faker', FakerViewExtension::class, true);
 
             $this->setBooted();
         }

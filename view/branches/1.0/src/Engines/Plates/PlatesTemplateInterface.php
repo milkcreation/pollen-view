@@ -6,6 +6,7 @@ namespace Pollen\View\Engines\Plates;
 
 /**
  * @mixin \League\Plates\Template\Template
+ * @method string faker(string $formatter, ...$args)
  */
 interface PlatesTemplateInterface
 {

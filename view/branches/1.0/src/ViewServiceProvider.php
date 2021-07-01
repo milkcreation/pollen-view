@@ -7,6 +7,7 @@ namespace Pollen\View;
 use Pollen\Container\BootableServiceProvider;
 use Pollen\View\Engines\Plates\PlatesViewEngine;
 use Pollen\View\Engines\Twig\TwigViewEngine;
+use Pollen\View\Extensions\FakerViewExtension;
 
 class ViewServiceProvider extends BootableServiceProvider
 {
@@ -15,7 +16,10 @@ class ViewServiceProvider extends BootableServiceProvider
      */
     protected $provides = [
         ViewInterface::class,
-        ViewManagerInterface::class
+        ViewManagerInterface::class,
+        PlatesViewEngine::class,
+        TwigViewEngine::class,
+        FakerViewExtension::class
     ];
 
     /**
@@ -40,6 +44,10 @@ class ViewServiceProvider extends BootableServiceProvider
 
         $this->getContainer()->share(TwigViewEngine::class, function () {
             return new TwigViewEngine();
+        });
+
+        $this->getContainer()->share(FakerViewExtension::class, function () {
+            return new FakerViewExtension();
         });
     }
 }
