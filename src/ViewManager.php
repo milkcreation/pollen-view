@@ -312,7 +312,7 @@ class ViewManager implements ViewManagerInterface
     /**
      * @inheritDoc
      */
-    public function setDefault(string $name): ViewManagerInterface
+    public function setDefaultEngine(string $name): ViewManagerInterface
     {
         $this->defaultEngine = $name;
         $this->defaultView = null;

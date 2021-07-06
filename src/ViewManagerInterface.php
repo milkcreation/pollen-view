@@ -72,11 +72,11 @@ interface ViewManagerInterface extends
     public function registerExtension(string $name, $extensionDef, bool $shared = false): ViewManagerInterface;
 
     /**
-     * Set default view.
+     * Set default view engine.
      *
      * @param string $name
      *
      * @return static
      */
-    public function setDefault(string $name): ViewManagerInterface;
+    public function setDefaultEngine(string $name): ViewManagerInterface;
 }
