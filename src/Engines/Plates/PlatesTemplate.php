@@ -9,11 +9,15 @@ use Pollen\Support\Html;
 use League\Plates\Template\Template;
 use Pollen\Support\Proxy\ContainerProxy;
 
+/**
+ * @method string faker(string $formatter, ...$args)
+ */
 class PlatesTemplate extends Template implements PlatesTemplateInterface
 {
     use ContainerProxy;
 
     /**
+     *
      * @var PlatesEngine
      */
     protected $engine;

@@ -4,16 +4,13 @@ declare(strict_types=1);
 
 namespace Pollen\View;
 
-use Pollen\Container\BootableServiceProvider;
+use Pollen\Container\ServiceProvider;
 use Pollen\View\Engines\Plates\PlatesViewEngine;
 use Pollen\View\Engines\Twig\TwigViewEngine;
 use Pollen\View\Extensions\FakerViewExtension;
 
-class ViewServiceProvider extends BootableServiceProvider
+class ViewServiceProvider extends ServiceProvider
 {
-    /**
-     * @inheritDoc
-     */
     protected $provides = [
         ViewInterface::class,
         ViewManagerInterface::class,

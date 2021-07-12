@@ -14,6 +14,7 @@ class PlatesEngine extends BasePlatesEngine
 
     /**
      * Template class name.
+     * @var string
      */
     protected string $templateClass = PlatesTemplate::class;
 
