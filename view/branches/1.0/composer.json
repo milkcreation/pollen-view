@@ -1,6 +1,6 @@
 {
   "name": "pollen-solutions/view",
-  "description": "Pollen View Component - View template engine system.",
+  "description": "Pollen Solutions - View Component - View template engine system.",
   "homepage": "https://www.presstify.com/pollen-solutions/view/",
   "keywords": [
     "pollen-solutions",
@@ -8,18 +8,12 @@
     "view",
     "template engine"
   ],
-  "time": "2021-07-06",
+  "time": "2021-07-09",
   "license": "MIT",
   "authors": [
     {
       "name": "Jordy Manner",
       "email": "jordy@presstify.com"
-    }
-  ],
-  "repositories": [
-    {
-      "type": "composer",
-      "url": "https://composer.presstify.com/pollen-solutions/"
     }
   ],
   "require": {
@@ -45,7 +39,7 @@
   },
   "suggest": {
     "odan/plates-asset-cache" : "Caching and compression for Plates template assets (JavaScript and CSS).",
-    "pollen-solutions/container" : "Pollen Container Component - PSR-11 ready Dependencies Injection Container."
+    "pollen-solutions/container" : "Pollen Solutions - Container Component - PSR-11 ready Dependencies Injection Container."
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
